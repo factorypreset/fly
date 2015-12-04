@@ -23,6 +23,8 @@ type FlyCommand struct {
 
 	Builds BuildsCommand `command:"builds" alias:"b" description:"List builds data"`
 
+	TriggerJob TriggerJobCommand `command:"trigger-job"   alias:"t" description:"Trigger a job"`
+
 	Volumes VolumesCommand `command:"volumes" alias:"vs" description:"List the active volumes"`
 	Workers WorkersCommand `command:"workers" alias:"ws" description:"List the registered workers"`
 }
