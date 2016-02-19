@@ -20,12 +20,14 @@ var _ = Describe("Hijacking", func() {
 	var hijacked <-chan struct{}
 	var workingDirectory string
 	var envVariables []string
+	var user string
 
 	BeforeEach(func() {
 		atcServer = ghttp.NewServer()
 		hijacked = nil
 		workingDirectory = ""
 		envVariables = nil
+		user = "root"
 	})
 
 	AfterEach(func() {
@@ -47,7 +49,7 @@ var _ = Describe("Hijacking", func() {
 				err := body.Decode(&processSpec)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(processSpec.User).To(Equal("root"))
+				Expect(processSpec.User).To(Equal(user))
 				Expect(processSpec.Dir).To(Equal(workingDirectory))
 				for _, envVariable := range envVariables {
 					Expect(processSpec.Env).To(ContainElement(envVariable))
@@ -218,6 +220,34 @@ var _ = Describe("Hijacking", func() {
 		})
 
 		It("hijacks the most recent one-off build and sets the specified environment variables", func() {
+			hijack("-s", "some-step")
+		})
+	})
+
+	Context("when the container specifies a user", func() {
+		BeforeEach(func() {
+			didHijack := make(chan struct{})
+			hijacked = didHijack
+			user = "amelia"
+
+			atcServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/builds"),
+					ghttp.RespondWithJSONEncoded(200, []atc.Build{
+						{ID: 3, Name: "3", Status: "started"},
+					}),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/containers", "build-id=3&step_name=some-step"),
+					ghttp.RespondWithJSONEncoded(200, []atc.Container{
+						{ID: "container-id-1", BuildID: 3, StepType: "task", StepName: "some-step", User: "amelia"},
+					}),
+				),
+				hijackHandler("container-id-1", didHijack, nil),
+			)
+		})
+
+		It("hijacks the most recent one-off build as the specified user", func() {
 			hijack("-s", "some-step")
 		})
 	})

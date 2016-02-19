@@ -270,13 +270,17 @@ func (command *HijackCommand) Execute(args []string) error {
 		}
 	}
 
+	user := chosenContainer.User
+	if user == "" {
+		user = "root"
+	}
 	envVariables := append(chosenContainer.EnvironmentVariables, "TERM="+os.Getenv("TERM"))
 
 	spec := atc.HijackProcessSpec{
 		Path: path,
 		Args: args,
 		Env:  envVariables,
-		User: "root",
+		User: user,
 		Dir:  chosenContainer.WorkingDirectory,
 
 		Privileged: privileged,
