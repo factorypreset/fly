@@ -13,4 +13,10 @@ if not_installed ginkgo; then
 fi
 
 cd $(dirname $0)/..
+
+export GOPATH=$PWD/gopath
+export PATH=$PATH:$GOPATH/bin
+
+cd $GOPATH/src/stash.zipcar.com/sav/savannah
+
 ginkgo -r -p -race
