@@ -1,3 +1,7 @@
 #!/bin/bash -x
 echo "HAI"
 
+which git
+
+ls -larth fly/
+
